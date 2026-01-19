@@ -29,11 +29,15 @@ creds = Credentials.from_service_account_info(
 client = gspread.authorize(creds)
 
 # 👉 nombre EXACTO del Google Sheet
-spreadsheets = client.list_spreadsheet_files()
-st.write([s["name"] for s in spreadsheets])
 
+# CACHEAR EL SHEET PRINCIPAL TAMBIÉN
 
-sheet = client.open("Registro_Actividades").worksheet("Registros")
+@st.cache_resource
+def get_registros_sheet():
+    sh = client.open("Registro_Actividades")
+    return sh.worksheet("Registros")
+
+sheet = get_registros_sheet()
 
 # 👀 Conectar catálogos
 
@@ -91,16 +95,7 @@ if enviar:
         str(hora_inicio),
         str(hora_fin),
         capataz,
-        ahora_pe.now().strftime("%d-%m-%Y %H:%M:%S")  # timestamp
+        datetime.now(zona_pe).strftime("%d-%m-%Y %H:%M:%S")  # timestamp
     ])
 
     st.success("✅ Registro guardado correctamente")
-
-# CACHEAR EL SHEET PRINCIPAL TAMBIÉN
-
-@st.cache_resource
-def get_sheet():
-    sh = client.open("Registro_Actividades")
-    return sh.sheet1
-
-sheet = get_sheet()
