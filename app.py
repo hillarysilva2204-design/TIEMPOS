@@ -49,9 +49,8 @@ ahora_pe = datetime.now(zona_pe)
 
 # Cargar Imagen
 st.subheader("🗺️ Sectorización")
-
 st.image(
-    "assets/sectorizacion.png",
+    "assets/sectorizacion.jpg",
     caption="Plano de sectores de trabajo",
     use_column_width=True
 )
@@ -99,4 +98,3 @@ def cargar_catalogo(nombre_hoja):
     hoja = client.open("Registro_Actividades").worksheet(nombre_hoja)
     valores = hoja.col_values(1)
     return [v for v in valores if v.strip() != ""]
-
