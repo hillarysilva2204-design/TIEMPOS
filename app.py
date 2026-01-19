@@ -2,7 +2,7 @@ import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
-
+from zoneinfo import ZoneInfo
 # -------------------------------
 # Configuración de la página
 # -------------------------------
@@ -42,11 +42,26 @@ sectores = cargar_catalogo("Sectores")
 actividades = cargar_catalogo("Actividades")
 capataces = cargar_catalogo("Capataces")
 
+# Define la hora local de Perú
+
+zona_pe = ZoneInfo("America/Lima")
+ahora_pe = datetime.now(zona_pe)
+
+# Cargar Imagen
+st.subheader("🗺️ Sectorización")
+
+st.image(
+    "assets/sectorizacion.png",
+    caption="Plano de sectores de trabajo",
+    use_column_width=True
+)
+
+
 # -------------------------------
 # Formulario de registro
 # -------------------------------
 with st.form("registro_actividades"):
-    fecha = st.date_input("📅 Fecha", value=datetime.today())
+    fecha = st.date_input("📅 Fecha", value=ahora_pe.today())
     sector = st.selectbox("📍 Sector", sectores)
     actividad = st.selectbox("🛠 Actividad", actividades    )
     personas = st.number_input(
@@ -54,7 +69,7 @@ with st.form("registro_actividades"):
         min_value=1,
         step=1
     )
-    hora_inicio = st.time_input("⏱ Hora inicio")
+    hora_inicio = st.time_input("⏱ Hora inicio", value=ahora_pe.time())
     hora_fin = st.time_input("⏱ Hora fin")
     capataz = st.selectbox("🧑‍🏭 Capataz responsable", capataces)
 
@@ -72,7 +87,7 @@ if enviar:
         str(hora_inicio),
         str(hora_fin),
         capataz,
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # timestamp
+        ahora_pe.now().strftime("%d-%m-%Y %H:%M:%S")  # timestamp
     ])
 
     st.success("✅ Registro guardado correctamente")
@@ -84,3 +99,4 @@ def cargar_catalogo(nombre_hoja):
     hoja = client.open("Registro_Actividades").worksheet(nombre_hoja)
     valores = hoja.col_values(1)
     return [v for v in valores if v.strip() != ""]
+
