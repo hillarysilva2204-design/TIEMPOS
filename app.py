@@ -29,14 +29,19 @@ creds = Credentials.from_service_account_info(
 client = gspread.authorize(creds)
 
 # 👉 nombre EXACTO del Google Sheet
-sheet = client.open("Registro_Actividades").sheet1
+spreadsheets = client.list_spreadsheet_files()
+st.write([s["name"] for s in spreadsheets])
+
+
+sheet = client.open("Registro_Actividades").worksheet("Registros")
 
 # 👀 Conectar catálogos
 
+@st.cache_data(ttl=600)  # 10 minutos
 def cargar_catalogo(nombre_hoja):
-    hoja = client.open("Registro_Actividades").worksheet(nombre_hoja)
-    valores = hoja.col_values(1)
-    return [v for v in valores if v.strip() != ""]
+    sh = client.open("Registro_Actividades")
+    ws = sh.worksheet(nombre_hoja)
+    return ws.col_values(1)[1:]  # 
 
 sectores = cargar_catalogo("Sectores")
 actividades = cargar_catalogo("Actividades")
@@ -62,7 +67,7 @@ st.image(
 with st.form("registro_actividades"):
     fecha = st.date_input("📅 Fecha", value=ahora_pe.today())
     sector = st.selectbox("📍 Sector", sectores)
-    actividad = st.selectbox("🛠 Actividad", actividades    )
+    actividad = st.selectbox("🛠 Actividad", actividades)
     personas = st.number_input(
         "👷 Personas en cuadrilla",
         min_value=1,
@@ -91,10 +96,11 @@ if enviar:
 
     st.success("✅ Registro guardado correctamente")
 
-# Cachear catálogos – performance pro, para que no lea Sheets en cada recarga:
+# CACHEAR EL SHEET PRINCIPAL TAMBIÉN
 
-@st.cache_data(ttl=300)
-def cargar_catalogo(nombre_hoja):
-    hoja = client.open("Registro_Actividades").worksheet(nombre_hoja)
-    valores = hoja.col_values(1)
-    return [v for v in valores if v.strip() != ""]
+@st.cache_resource
+def get_sheet():
+    sh = client.open("Registro_Actividades")
+    return sh.sheet1
+
+sheet = get_sheet()
